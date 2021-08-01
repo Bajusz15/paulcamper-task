@@ -3,44 +3,25 @@ package main
 import (
 	"context"
 	lru "github.com/hashicorp/golang-lru"
+	"github.com/stretchr/testify/assert"
 	"golang.org/x/text/language"
 	"testing"
 )
 
 func Test_cachedTranslator_Translate(t *testing.T) {
-	type fields struct {
-		translator Translator
-		repo       *lru.Cache
+	m := new(mockTranslator)
+	c := context.TODO()
+	from := language.Hungarian
+	to := language.English
+	data := "example"
+	cache, _ := lru.New(100)
+	cache.Add(from.String()+"-"+to.String()+"-"+data, "mock translator result")
+	ct := &cachedTranslator{
+		translator: m,
+		repo:       cache,
 	}
-	type args struct {
-		ctx  context.Context
-		from language.Tag
-		to   language.Tag
-		data string
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    string
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ct := &cachedTranslator{
-				translator: tt.fields.translator,
-				repo:       tt.fields.repo,
-			}
-			got, err := ct.Translate(tt.args.ctx, tt.args.from, tt.args.to, tt.args.data)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Translate() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("Translate() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	_, err := ct.Translate(c, from, to, data)
+	assert.Equal(t, nil, err)
+	//testError := errors.New("this is a test error")
+	m.AssertNotCalled(t, "Translate", c, from, to, data)
 }
