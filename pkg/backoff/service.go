@@ -10,8 +10,8 @@ type Backoff struct {
 	Max     time.Duration
 }
 
-func NewService() *Backoff {
-	return &Backoff{attempt: 0}
+func NewService(max time.Duration) *Backoff {
+	return &Backoff{attempt: 0, Max: max}
 }
 
 func (b *Backoff) Try(f func() error) {

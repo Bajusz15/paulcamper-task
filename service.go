@@ -1,6 +1,9 @@
 package main
 
-import "time"
+import (
+	lru "github.com/hashicorp/golang-lru"
+	"time"
+)
 
 // Service is a Translator user.
 type Service struct {
@@ -16,7 +19,10 @@ func NewService() *Service {
 	)
 
 	return &Service{
-		translator: t,
+		translator: &cachedTranslator{
+			translator: &backoffTranslator{t, 10 * time.Second},
+			repo:       lru.Cache{},
+		},
 	}
 }
 
