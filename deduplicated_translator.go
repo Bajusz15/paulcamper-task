@@ -7,13 +7,13 @@ import (
 	"sync"
 )
 
-type decoupledTranslator struct {
+type deduplicatedTranslator struct {
 	translator Translator
 	requestMap map[string]bool
 	mux        *sync.RWMutex
 }
 
-func (dt *decoupledTranslator) Translate(ctx context.Context, from, to language.Tag, data string) (string, error) {
+func (dt *deduplicatedTranslator) Translate(ctx context.Context, from, to language.Tag, data string) (string, error) {
 	key := from.String() + "-" + to.String() + "-" + data
 	dt.mux.RLock()
 	for dt.requestMap[key] == true {

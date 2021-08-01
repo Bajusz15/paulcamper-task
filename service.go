@@ -26,7 +26,7 @@ func NewService() *Service {
 	var decoupleMap map[string]bool
 	var mutex sync.RWMutex
 	return &Service{
-		translator: &decoupledTranslator{
+		translator: &deduplicatedTranslator{
 			translator: &cachedTranslator{
 				translator: newBackoffTranslator(t, 10*time.Second, 5),
 				repo:       cache,
