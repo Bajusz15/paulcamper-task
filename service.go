@@ -2,6 +2,7 @@ package main
 
 import (
 	lru "github.com/hashicorp/golang-lru"
+	"log"
 	"time"
 )
 
@@ -17,11 +18,14 @@ func NewService() *Service {
 		500*time.Millisecond,
 		0.1,
 	)
-
+	cache, err := lru.New(100)
+	if err != nil {
+		log.Fatalln("could not create cache")
+	}
 	return &Service{
 		translator: &cachedTranslator{
-			translator: &backoffTranslator{t, 10 * time.Second},
-			repo:       lru.Cache{},
+			translator: newBackoffTranslator(t, 10*time.Second, 5),
+			repo:       cache,
 		},
 	}
 }

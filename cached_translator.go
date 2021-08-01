@@ -8,7 +8,7 @@ import (
 
 type cachedTranslator struct {
 	translator Translator
-	repo       lru.Cache
+	repo       *lru.Cache
 }
 
 func (ct *cachedTranslator) Translate(ctx context.Context, from, to language.Tag, data string) (string, error) {

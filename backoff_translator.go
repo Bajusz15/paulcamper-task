@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/pailcamper/pc-offline-challenge/pkg/backoff"
 	"golang.org/x/text/language"
 	"time"
@@ -9,18 +10,28 @@ import (
 
 type backoffTranslator struct {
 	translator Translator
-	maxBackoff time.Duration
+
+	backoffService *backoff.Service
+}
+
+func newBackoffTranslator(t Translator, maxBackoff time.Duration, retries int) *backoffTranslator {
+	return &backoffTranslator{t, backoff.NewService(maxBackoff, retries)}
 }
 
 func (bt *backoffTranslator) Translate(ctx context.Context, from, to language.Tag, data string) (string, error) {
-	backoffService := backoff.NewService(bt.maxBackoff)
+
 	var result string
 	var err error
 
-	backoffService.Try(func() error {
+	bt.backoffService.Try(func() error {
 		result, err = bt.translator.Translate(ctx, from, to, data)
+		fmt.Println(err)
 		return err
 	})
+
+	if err != nil {
+		return "", err
+	}
 
 	return result, nil
 }
