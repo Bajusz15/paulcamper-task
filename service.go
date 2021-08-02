@@ -23,7 +23,7 @@ func NewService() *Service {
 	if err != nil {
 		log.Fatalln("could not create cache")
 	}
-	var decoupleMap map[string]bool
+	requestMap := map[string]bool{}
 	var mutex sync.RWMutex
 	return &Service{
 		translator: &deduplicatedTranslator{
@@ -31,7 +31,7 @@ func NewService() *Service {
 				translator: newBackoffTranslator(t, 10*time.Second, 5),
 				repo:       cache,
 			},
-			requestMap: decoupleMap,
+			requestMap: requestMap,
 			mux:        &mutex,
 		},
 	}
