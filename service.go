@@ -3,7 +3,6 @@ package main
 import (
 	lru "github.com/hashicorp/golang-lru"
 	"log"
-	"sync"
 	"time"
 )
 
@@ -23,17 +22,12 @@ func NewService() *Service {
 	if err != nil {
 		log.Fatalln("could not create cache")
 	}
-	requestMap := map[string]bool{}
-	var mutex sync.RWMutex
+	bt := NewBackoffTranslator(t, 16*time.Second, 10)
+	ct := NewCachedTranslator(bt, cache)
+	dt := NewDeduplicatedTranslator(ct)
+
 	return &Service{
-		translator: &deduplicatedTranslator{
-			translator: &cachedTranslator{
-				translator: newBackoffTranslator(t, 10*time.Second, 5),
-				repo:       cache,
-			},
-			requestMap: requestMap,
-			mux:        &mutex,
-		},
+		translator: dt,
 	}
 }
 

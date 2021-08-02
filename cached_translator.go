@@ -11,8 +11,13 @@ type cachedTranslator struct {
 	repo       *lru.Cache
 }
 
+func NewCachedTranslator(t Translator, cache *lru.Cache) *cachedTranslator {
+	return &cachedTranslator{t, cache}
+}
+
 func (ct *cachedTranslator) Translate(ctx context.Context, from, to language.Tag, data string) (string, error) {
-	val, ok := ct.repo.Get(from.String() + "-" + to.String() + "-" + data)
+	key := from.String() + "-" + to.String() + "-" + data
+	val, ok := ct.repo.Get(key)
 	if ok {
 		return val.(string), nil
 	}
@@ -22,7 +27,7 @@ func (ct *cachedTranslator) Translate(ctx context.Context, from, to language.Tag
 		return "", err
 	}
 
-	ct.repo.Add(from.String()+"-"+to.String()+"-"+data, result)
+	ct.repo.Add(key, result)
 
 	return result, nil
 }

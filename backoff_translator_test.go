@@ -27,7 +27,7 @@ func Test_backoffTranslator_Retries(t *testing.T) {
 	from := language.Hungarian
 	to := language.English
 	data := "example"
-	bt := newBackoffTranslator(m, 2*time.Second, 10)
+	bt := NewBackoffTranslator(m, 2*time.Second, 10)
 
 	start := time.Now()
 	testError := errors.New("this is a test error")
@@ -59,7 +59,7 @@ func Test_backoffTranslator_Error(t *testing.T) {
 	testError := errors.New("this is a test error")
 
 	m.On("Translate", c, from, to, data).Return("", testError)
-	bt := newBackoffTranslator(m, 2*time.Second, 10)
+	bt := NewBackoffTranslator(m, 2*time.Second, 10)
 
 	result, err := bt.Translate(c, from, to, data)
 	assert.Equal(t, testError, err)
@@ -77,7 +77,7 @@ func Test_backoffTranslator_Translate(t *testing.T) {
 		data string
 	}
 	m := new(mockTranslator)
-	bt := newBackoffTranslator(m, 2*time.Second, 10)
+	bt := NewBackoffTranslator(m, 2*time.Second, 10)
 
 	tests := []struct {
 		name    string

@@ -14,12 +14,11 @@ type backoffTranslator struct {
 	backoffService *backoff.Service
 }
 
-func newBackoffTranslator(t Translator, maxBackoff time.Duration, retries int) *backoffTranslator {
+func NewBackoffTranslator(t Translator, maxBackoff time.Duration, retries int) *backoffTranslator {
 	return &backoffTranslator{t, backoff.NewService(maxBackoff, retries)}
 }
 
 func (bt *backoffTranslator) Translate(ctx context.Context, from, to language.Tag, data string) (string, error) {
-
 	var result string
 	var err error
 
