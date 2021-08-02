@@ -3,34 +3,41 @@ package main
 import (
 	"context"
 	"golang.org/x/text/language"
-	"runtime"
 	"sync"
 )
 
 type deduplicatedTranslator struct {
-	translator Translator
-	requestMap map[string]bool
-	mux        *sync.RWMutex
+	translator           Translator
+	requestMap           map[string]bool
+	mux                  *sync.Mutex
+	resourceSynchronizer *sync.Cond
+}
+
+func NewDeduplicatedTranslator(t Translator) *deduplicatedTranslator {
+	mutex := sync.Mutex{}
+	condition := sync.NewCond(&mutex)
+	return &deduplicatedTranslator{t, map[string]bool{}, &mutex, condition}
 }
 
 func (dt *deduplicatedTranslator) Translate(ctx context.Context, from, to language.Tag, data string) (string, error) {
 	key := from.String() + "-" + to.String() + "-" + data
-	dt.mux.RLock()
+	dt.resourceSynchronizer.L.Lock()
 	for dt.requestMap[key] == true {
-		//TODO: wait here until it is false
-		dt.mux.RUnlock()
-		runtime.Gosched()
-		dt.mux.RLock()
+		dt.resourceSynchronizer.Wait()
+		//runtime.Gosched()
 	}
-	dt.mux.RUnlock()
+	dt.resourceSynchronizer.L.Unlock()
 
-	dt.mux.Lock()
+	dt.resourceSynchronizer.L.Lock()
 	dt.requestMap[key] = true
-	dt.mux.Unlock()
+	dt.resourceSynchronizer.Broadcast()
+	dt.resourceSynchronizer.L.Unlock()
 	result, err := dt.translator.Translate(ctx, from, to, data)
-	dt.mux.Lock()
+	//dt.mux.Lock()
+	dt.resourceSynchronizer.L.Lock()
 	dt.requestMap[key] = false
-	dt.mux.Unlock()
+	dt.resourceSynchronizer.Broadcast()
+	dt.resourceSynchronizer.L.Unlock()
 	if err != nil {
 		return "", err
 	}
